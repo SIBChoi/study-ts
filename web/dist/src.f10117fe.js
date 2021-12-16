@@ -117,7 +117,47 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"../node_modules/axios/lib/helpers/bind.js":[function(require,module,exports) {
+})({"src/model/Eventing.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Eventing = void 0;
+
+var Eventing =
+/** @class */
+function () {
+  function Eventing() {
+    var _this = this;
+
+    this.events = {};
+
+    this.on = function (eventName, callback) {
+      var handlers = _this.events[eventName] || [];
+      handlers.push(callback);
+      _this.events[eventName] = handlers;
+    };
+
+    this.trigger = function (eventName) {
+      var handlers = _this.events[eventName];
+
+      if (!handlers || handlers.length === 0) {
+        console.log('Wrong EvnetName. #Please Check out EventName');
+        return;
+      }
+
+      handlers.forEach(function (callback) {
+        return callback();
+      });
+    };
+  }
+
+  return Eventing;
+}();
+
+exports.Eventing = Eventing;
+},{}],"../node_modules/axios/lib/helpers/bind.js":[function(require,module,exports) {
 'use strict';
 
 module.exports = function bind(fn, thisArg) {
@@ -2213,7 +2253,7 @@ module.exports.default = axios;
 
 },{"./utils":"../node_modules/axios/lib/utils.js","./helpers/bind":"../node_modules/axios/lib/helpers/bind.js","./core/Axios":"../node_modules/axios/lib/core/Axios.js","./core/mergeConfig":"../node_modules/axios/lib/core/mergeConfig.js","./defaults":"../node_modules/axios/lib/defaults.js","./cancel/Cancel":"../node_modules/axios/lib/cancel/Cancel.js","./cancel/CancelToken":"../node_modules/axios/lib/cancel/CancelToken.js","./cancel/isCancel":"../node_modules/axios/lib/cancel/isCancel.js","./env/data":"../node_modules/axios/lib/env/data.js","./helpers/spread":"../node_modules/axios/lib/helpers/spread.js","./helpers/isAxiosError":"../node_modules/axios/lib/helpers/isAxiosError.js"}],"../node_modules/axios/index.js":[function(require,module,exports) {
 module.exports = require('./lib/axios');
-},{"./lib/axios":"../node_modules/axios/lib/axios.js"}],"src/model/User.ts":[function(require,module,exports) {
+},{"./lib/axios":"../node_modules/axios/lib/axios.js"}],"src/model/Sync.ts":[function(require,module,exports) {
 "use strict";
 
 var __awaiter = this && this.__awaiter || function (thisArg, _arguments, P, generator) {
@@ -2368,48 +2408,22 @@ var __importDefault = this && this.__importDefault || function (mod) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.User = void 0;
+exports.Sync = void 0;
 
 var axios_1 = __importDefault(require("axios"));
 
 axios_1.default.defaults.baseURL = 'http://localhost:3000/users';
 
-var User =
+var Sync =
 /** @class */
 function () {
-  function User(data) {
-    this.data = data;
-    this.events = {};
-  }
+  function Sync() {}
 
-  User.prototype.get = function (propName) {
-    return this.data[propName];
-  };
-
-  User.prototype.set = function (propName) {
-    this.data = Object.assign(this.data, propName);
-  };
-
-  User.prototype.on = function (eventName, callback) {
-    var handlers = this.events[eventName] || [];
-    handlers.push(callback);
-    this.events[eventName] = handlers;
-  };
-
-  User.prototype.trigger = function (eventName) {
-    var handlers = this.events[eventName];
-
-    if (!handlers || handlers.length === 0) {
-      console.log('Wrong EvnetName. #Please Check out EventName');
-      return;
+  Sync.prototype.fetch = function (id) {
+    if (id === void 0) {
+      id = '';
     }
 
-    handlers.forEach(function (callback) {
-      return callback();
-    });
-  };
-
-  User.prototype.fetch = function () {
     return __awaiter(this, void 0, Promise, function () {
       var data;
       return __generator(this, function (_a) {
@@ -2417,14 +2431,301 @@ function () {
           case 0:
             return [4
             /*yield*/
-            , axios_1.default.get("" + this.get('id'))];
+            , axios_1.default.get("" + id)];
 
           case 1:
+            data = _a.sent().data;
+            return [2
+            /*return*/
+            , data];
+        }
+      });
+    });
+  };
+
+  Sync.prototype.save = function (data) {
+    return __awaiter(this, void 0, Promise, function () {
+      var id;
+      return __generator(this, function (_a) {
+        switch (_a.label) {
+          case 0:
+            id = data.id;
+            if (!id) return [3
+            /*break*/
+            , 2];
             return [4
             /*yield*/
-            , _a.sent().data];
+            , axios_1.default.put("" + id, data)];
+
+          case 1:
+            return [2
+            /*return*/
+            , _a.sent()];
 
           case 2:
+            return [4
+            /*yield*/
+            , axios_1.default.post('', data)];
+
+          case 3:
+            return [2
+            /*return*/
+            , _a.sent()];
+        }
+      });
+    });
+  };
+
+  return Sync;
+}();
+
+exports.Sync = Sync;
+},{"axios":"../node_modules/axios/index.js"}],"src/model/Attributes.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Attributes = void 0;
+
+var Attributes =
+/** @class */
+function () {
+  function Attributes(data) {
+    var _this = this;
+
+    this.data = data;
+
+    this.get = function (key) {
+      return _this.data[key];
+    };
+  }
+
+  Attributes.prototype.set = function (update) {
+    this.data = Object.assign(this.data, update);
+  };
+
+  Object.defineProperty(Attributes.prototype, "getAll", {
+    get: function get() {
+      return this.data;
+    },
+    enumerable: false,
+    configurable: true
+  });
+  return Attributes;
+}();
+
+exports.Attributes = Attributes;
+},{}],"src/model/User.ts":[function(require,module,exports) {
+"use strict";
+
+var __awaiter = this && this.__awaiter || function (thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function (resolve) {
+      resolve(value);
+    });
+  }
+
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
+};
+
+var __generator = this && this.__generator || function (thisArg, body) {
+  var _ = {
+    label: 0,
+    sent: function sent() {
+      if (t[0] & 1) throw t[1];
+      return t[1];
+    },
+    trys: [],
+    ops: []
+  },
+      f,
+      y,
+      t,
+      g;
+  return g = {
+    next: verb(0),
+    "throw": verb(1),
+    "return": verb(2)
+  }, typeof Symbol === "function" && (g[Symbol.iterator] = function () {
+    return this;
+  }), g;
+
+  function verb(n) {
+    return function (v) {
+      return step([n, v]);
+    };
+  }
+
+  function step(op) {
+    if (f) throw new TypeError("Generator is already executing.");
+
+    while (_) {
+      try {
+        if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+        if (y = 0, t) op = [op[0] & 2, t.value];
+
+        switch (op[0]) {
+          case 0:
+          case 1:
+            t = op;
+            break;
+
+          case 4:
+            _.label++;
+            return {
+              value: op[1],
+              done: false
+            };
+
+          case 5:
+            _.label++;
+            y = op[1];
+            op = [0];
+            continue;
+
+          case 7:
+            op = _.ops.pop();
+
+            _.trys.pop();
+
+            continue;
+
+          default:
+            if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) {
+              _ = 0;
+              continue;
+            }
+
+            if (op[0] === 3 && (!t || op[1] > t[0] && op[1] < t[3])) {
+              _.label = op[1];
+              break;
+            }
+
+            if (op[0] === 6 && _.label < t[1]) {
+              _.label = t[1];
+              t = op;
+              break;
+            }
+
+            if (t && _.label < t[2]) {
+              _.label = t[2];
+
+              _.ops.push(op);
+
+              break;
+            }
+
+            if (t[2]) _.ops.pop();
+
+            _.trys.pop();
+
+            continue;
+        }
+
+        op = body.call(thisArg, _);
+      } catch (e) {
+        op = [6, e];
+        y = 0;
+      } finally {
+        f = t = 0;
+      }
+    }
+
+    if (op[0] & 5) throw op[1];
+    return {
+      value: op[0] ? op[1] : void 0,
+      done: true
+    };
+  }
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.User = void 0;
+
+var Eventing_1 = require("./Eventing");
+
+var Sync_1 = require("./Sync");
+
+var Attributes_1 = require("./Attributes");
+
+var User =
+/** @class */
+function () {
+  function User(attrs) {
+    this.events = new Eventing_1.Eventing();
+    this.sync = new Sync_1.Sync();
+    this.attrs = new Attributes_1.Attributes(attrs);
+  }
+
+  Object.defineProperty(User.prototype, "on", {
+    get: function get() {
+      return this.events.on;
+    },
+    enumerable: false,
+    configurable: true
+  });
+  Object.defineProperty(User.prototype, "trriger", {
+    get: function get() {
+      return this.events.trigger;
+    },
+    enumerable: false,
+    configurable: true
+  });
+  Object.defineProperty(User.prototype, "get", {
+    get: function get() {
+      return this.attrs.get;
+    },
+    enumerable: false,
+    configurable: true
+  });
+
+  User.prototype.set = function (update) {
+    this.attrs.set(update);
+    this.events.trigger('change');
+  };
+
+  User.prototype.fetch = function () {
+    return __awaiter(this, void 0, Promise, function () {
+      var id, data;
+      return __generator(this, function (_a) {
+        switch (_a.label) {
+          case 0:
+            id = this.get('id');
+
+            if (typeof id !== 'number') {
+              throw new Error('There is no Id. Please check out again');
+            }
+
+            return [4
+            /*yield*/
+            , this.sync.fetch(id)];
+
+          case 1:
             data = _a.sent();
             this.set(data);
             return [2
@@ -2437,36 +2738,32 @@ function () {
 
   User.prototype.save = function () {
     return __awaiter(this, void 0, Promise, function () {
-      var id;
+      var err_1;
       return __generator(this, function (_a) {
         switch (_a.label) {
           case 0:
-            id = this.get('id');
-            if (!id) return [3
-            /*break*/
-            , 2];
+            _a.trys.push([0, 2,, 3]);
+
             return [4
             /*yield*/
-            , axios_1.default.put("" + id, this.data)];
+            , this.sync.save(this.attrs.getAll)];
 
           case 1:
             _a.sent();
 
+            this.trriger('save');
             return [3
             /*break*/
-            , 4];
+            , 3];
 
           case 2:
-            return [4
-            /*yield*/
-            , axios_1.default.post('', this.data)];
+            err_1 = _a.sent();
+            this.trriger('error');
+            return [3
+            /*break*/
+            , 3];
 
           case 3:
-            _a.sent();
-
-            _a.label = 4;
-
-          case 4:
             return [2
             /*return*/
             ];
@@ -2479,7 +2776,7 @@ function () {
 }();
 
 exports.User = User;
-},{"axios":"../node_modules/axios/index.js"}],"src/index.ts":[function(require,module,exports) {
+},{"./Eventing":"src/model/Eventing.ts","./Sync":"src/model/Sync.ts","./Attributes":"src/model/Attributes.ts"}],"src/index.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2489,10 +2786,12 @@ Object.defineProperty(exports, "__esModule", {
 var User_1 = require("./model/User");
 
 var user = new User_1.User({
-  name: 'New Record',
-  age: 3
+  id: 2
 });
-user.save();
+user.on('change', function () {
+  console.log(user);
+});
+user.fetch(); // user.sync.save({ name: 'save NewThing', age: 32 });
 },{"./model/User":"src/model/User.ts"}],"../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';

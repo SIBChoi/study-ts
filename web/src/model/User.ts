@@ -1,54 +1,56 @@
-import axios from 'axios';
-axios.defaults.baseURL = 'http://localhost:3000/users';
+import { Eventing } from './Eventing';
+import { Sync } from './Sync';
+import { Attributes } from './Attributes';
 
-interface UserProps {
+export interface UserProps {
   id?: number;
   name?: string;
   age?: number;
 }
 
-type Callback = () => void;
-
 export class User {
-  events: { [key: string]: Callback[] } = {};
+  public events: Eventing = new Eventing();
+  public sync: Sync<UserProps> = new Sync<UserProps>();
+  public attrs: Attributes<UserProps>;
 
-  constructor(private data: UserProps) {}
-
-  get(propName: string): string | number {
-    return this.data[propName];
+  constructor(attrs: UserProps) {
+    this.attrs = new Attributes<UserProps>(attrs);
   }
 
-  set(propName: UserProps): void {
-    this.data = Object.assign(this.data, propName);
+  get on() {
+    return this.events.on;
   }
 
-  on(eventName: string, callback: Callback): void {
-    const handlers = this.events[eventName] || [];
-    handlers.push(callback);
-    this.events[eventName] = handlers;
+  get trriger() {
+    return this.events.trigger;
   }
 
-  trigger(eventName: string): void {
-    const handlers = this.events[eventName];
-    if (!handlers || handlers.length === 0) {
-      console.log('Wrong EvnetName. #Please Check out EventName');
-      return;
-    }
-    handlers.forEach((callback) => callback());
+  get get() {
+    return this.attrs.get;
+  }
+
+  set(update: UserProps) {
+    this.attrs.set(update);
+    this.events.trigger('change');
   }
 
   async fetch(): Promise<void> {
-    const data: UserProps = await (await axios.get(`${this.get('id')}`)).data;
+    const id = this.get('id');
+
+    if (typeof id !== 'number') {
+      throw new Error('There is no Id. Please check out again');
+    }
+
+    const data = await this.sync.fetch(id);
     this.set(data);
   }
 
   async save(): Promise<void> {
-    const id = this.get('id');
-
-    if (id) {
-      await axios.put(`${id}`, this.data);
-    } else {
-      await axios.post('', this.data);
+    try {
+      await this.sync.save(this.attrs.getAll);
+      this.trriger('save');
+    } catch (err) {
+      this.trriger('error');
     }
   }
 }
