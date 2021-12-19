@@ -6,7 +6,7 @@ interface HasId {
   id?: number;
 }
 
-export class Sync<T extends HasId> {
+export class ApiSync<T extends HasId> {
   async fetch(id: number | string = ''): Promise<T> {
     const { data }: { data: T } = await axios.get(`${id}`);
     return data;

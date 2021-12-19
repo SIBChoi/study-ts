@@ -1,21 +1,27 @@
-import { Eventing } from './Eventing';
-import { Sync } from './Sync';
-import { Attributes } from './Attributes';
-
-export interface UserProps {
-  id?: number;
-  name?: string;
-  age?: number;
+interface ModelAttributes<T> {
+  get<K extends keyof T>(key: K): T[K];
+  set(update: T): void;
+  get getAll(): T;
+}
+interface Sync<T> {
+  fetch(id: number | string): Promise<T>;
+  save(data: T): Promise<T>;
+}
+interface Events {
+  on(eventName: string, callback: () => void): void;
+  trigger(eventName: string): void;
 }
 
-export class User {
-  public events: Eventing = new Eventing();
-  public sync: Sync<UserProps> = new Sync<UserProps>();
-  public attrs: Attributes<UserProps>;
+interface HasId {
+  id?: number;
+}
 
-  constructor(attrs: UserProps) {
-    this.attrs = new Attributes<UserProps>(attrs);
-  }
+export class Model<T extends HasId> {
+  constructor(
+    private attrs: ModelAttributes<T>,
+    private sync: Sync<T>,
+    private events: Events
+  ) {}
 
   get on() {
     return this.events.on;
@@ -29,7 +35,11 @@ export class User {
     return this.attrs.get;
   }
 
-  set(update: UserProps) {
+  get getAll(): T {
+    return this.attrs.getAll;
+  }
+
+  set(update: T) {
     this.attrs.set(update);
     this.events.trigger('change');
   }
